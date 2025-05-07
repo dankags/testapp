@@ -1,29 +1,45 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Stack } from "expo-router";
+import { ActivityIndicator, useColorScheme } from "react-native";
+import {  Roboto_300Light, Roboto_400Regular, Roboto_500Medium, Roboto_600SemiBold, Roboto_700Bold, Roboto_800ExtraBold } from '@expo-google-fonts/roboto';
+import { useFonts } from "expo-font";
+import "./global.css";
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  const colorScheme = useColorScheme() ?? "dark";
+  const [fontsLoaded] = useFonts({
+    Roboto_Light:Roboto_300Light, 
+    Roboto_Regular:Roboto_400Regular, 
+    Roboto_Medium:Roboto_500Medium, 
+    Roboto_SemiBold:Roboto_600SemiBold, 
+    Roboto_Bold:Roboto_700Bold, 
+    Roboto_ExtraBold:Roboto_800ExtraBold, 
   });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  
+ if(!fontsLoaded){
+   return null
+ }
+
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <GestureHandlerRootView>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      />
+      </GestureHandlerRootView>
     </ThemeProvider>
   );
 }
+
+
