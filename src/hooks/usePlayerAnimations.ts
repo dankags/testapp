@@ -16,7 +16,7 @@ export function usePlayerAnimations({
      activeMusic: Music,
       translatedX: SharedValue<number>,
       tabsHeight:SharedValue<number>,
-      safeAreaHeight:number
+      safeAreaHeight:SharedValue<number>
     }) {
   const containerStyle = useAnimatedStyle(() => ({
     overflow:"hidden",
@@ -39,9 +39,9 @@ export function usePlayerAnimations({
     return { height, opacity, transform: [{ translateY }], display };
   }
 
-    const translateY=interpolate(tabsHeight.value,[64,safeAreaHeight-80],[0,-160])
+    const translateY=interpolate(tabsHeight.value,[64,safeAreaHeight.value-80],[0,-160])
     // const display=tabsHeight.value>safeAreaHeight*0.75?"none":"flex"
-    const opacity=interpolate(tabsHeight.value,[64,safeAreaHeight*0.4,safeAreaHeight-80],[1,0.2,0])
+    const opacity=interpolate(tabsHeight.value,[64,safeAreaHeight.value*0.4,safeAreaHeight.value-80],[1,0.2,0])
     
     return{
       transform:[{translateY}],
@@ -58,25 +58,25 @@ export function usePlayerAnimations({
   const animatedHeightTab = useAnimatedStyle(() => {
     const height = interpolate(
       tabsHeight.value,
-      [64, safeAreaHeight],
-      [60, safeAreaHeight - 80],
+      [64, safeAreaHeight.value],
+      [60, safeAreaHeight.value - 50],
       Extrapolation.CLAMP
     )
     const borderTopLeftRadius=interpolate(
       tabsHeight.value,
-      [64, safeAreaHeight],
+      [64, safeAreaHeight.value],
       [0, 12],
       Extrapolation.CLAMP
     )
     const borderTopRightRadius=interpolate(
       tabsHeight.value,
-      [64, safeAreaHeight],
+      [64, safeAreaHeight.value],
       [0, 12],
       Extrapolation.CLAMP
     )
     const backgroundColor=interpolateColor(
       tabsHeight.value,
-      [64, safeAreaHeight/2,safeAreaHeight],
+      [64, safeAreaHeight.value/2,safeAreaHeight.value],
       ["transparent", activeMusic.musicVibrantColor ?? '#000000',activeMusic.musicVibrantColor ?? '#000000'],
     )
       const isVisible = sharedHeight.value > SCREEN_HEIGHT * 0.75;

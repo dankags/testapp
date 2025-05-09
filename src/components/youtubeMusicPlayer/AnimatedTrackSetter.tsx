@@ -1,11 +1,6 @@
-import { Link } from "expo-router";
 import {
   Dimensions,
-  Text,
-  View,
   FlatList,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from "react-native";
 import Animated, {
   DerivedValue,
@@ -19,15 +14,12 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import {
-  GestureDetector,
   PanGesture,
   Pressable,
 } from "react-native-gesture-handler";
-import { Image } from "expo-image";
 import { dummyMusicData } from "@/src/constants/data";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import MusicComponent from "@/src/hooks/MusicComp";
+import { useCallback, useEffect, useRef, useState } from "react";
+import MusicComponent from "@/src/components/youtubeMusicPlayer/MusicComp";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("screen");
 
@@ -48,7 +40,7 @@ const AnimatedTrackSetter = ({
   handlePlayToggle: () => void;
   isPlaying: boolean;
   tabsHeight: SharedValue<number>;
-  safeAreaHeight: number;
+  safeAreaHeight: SharedValue<number>;
   handleSheetExpansion: () => void;
 }) => {
   const imageWidth = useDerivedValue(() => {
@@ -57,7 +49,7 @@ const AnimatedTrackSetter = ({
 
     return interpolate(
       source,
-      isExpanded ? [80, SCREEN_HEIGHT] : [64, safeAreaHeight - 80],
+      isExpanded ? [80, SCREEN_HEIGHT] : [64, safeAreaHeight.value - 80],
       isExpanded ? [60, SCREEN_WIDTH] : [SCREEN_WIDTH, 60],
       Extrapolation.CLAMP
     );
@@ -68,7 +60,7 @@ const AnimatedTrackSetter = ({
       const translateY = interpolate(
         sharedHeight.value,
         [80, SCREEN_HEIGHT],
-        [-50, 0],
+        [-20, 0],
         Extrapolation.CLAMP
       );
       const height = interpolate(
@@ -86,13 +78,13 @@ const AnimatedTrackSetter = ({
 
     const translateY = interpolate(
       tabsHeight.value,
-      [64, safeAreaHeight - 80],
-      [0, -82],
+      [64, safeAreaHeight.value - 80],
+      [0, -84],
       Extrapolation.CLAMP
     );
     const height = interpolate(
       tabsHeight.value,
-      [64, safeAreaHeight - 80],
+      [64, safeAreaHeight.value - 80],
       [510, 80],
       Extrapolation.CLAMP
     );
@@ -151,7 +143,7 @@ const QueueFlatlist = ({
   imageWidth: DerivedValue<number>;
   // imageWidthDepTabHeight:DerivedValue<number>,
   tabsHeight: SharedValue<number>;
-  safeAreaheight: number;
+  safeAreaheight: SharedValue<number>;
 }) => {
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useSharedValue(0);
@@ -214,12 +206,12 @@ const QueueFlatlist = ({
     }
     const height = interpolate(
       tabsHeight.value,
-      [64, safeAreaheight - 80],
+      [64, safeAreaheight.value - 80],
       [510, 80]
     );
     const width = interpolate(
       tabsHeight.value,
-      [64, safeAreaheight - 80],
+      [64, safeAreaheight.value - 80],
       [SCREEN_WIDTH, SCREEN_WIDTH * 0.75]
     );
     return { height, width };

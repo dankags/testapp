@@ -8,7 +8,7 @@ const SNAP_BOTTOM = 80;
 const { height: SCREEN_HEIGHT} = Dimensions.get('screen');
 const SNAP_TOP = SCREEN_HEIGHT;
 
-export function usePlayerGestures(tabsHeight:SharedValue<number>,safeAreaHeight:number,startTabHeight:SharedValue<number>,sharedHeight: SharedValue<number>, startHeight: SharedValue<number>, translatedX: SharedValue<number>, onNavigate: (dir: 'prev' | 'next') => void, setIsPlaying: (val: boolean) => void) {
+export function usePlayerGestures(tabsHeight:SharedValue<number>,safeAreaHeight:SharedValue<number>,startTabHeight:SharedValue<number>,sharedHeight: SharedValue<number>, startHeight: SharedValue<number>, translatedX: SharedValue<number>, onNavigate: (dir: 'prev' | 'next') => void, setIsPlaying: (val: boolean) => void) {
   const verticalPanGesture = useMemo(() =>
     Gesture.Pan()
   .activateAfterLongPress(200)
@@ -67,13 +67,13 @@ export function usePlayerGestures(tabsHeight:SharedValue<number>,safeAreaHeight:
       tabsHeight.value = clamp(
         startTabHeight.value - e.translationY,
         SNAP_BOTTOM,
-        safeAreaHeight
+        safeAreaHeight.value
       );
     })
      .onEnd((e)=>{
        const isFlickingUp = e.velocityY < -300;
     const isFlickingDown = e.velocityY > 300;
-    const maxHeight = safeAreaHeight-70; // use derived or constant if needed
+    const maxHeight = safeAreaHeight.value-70; // use derived or constant if needed
     const halfway = maxHeight / 2;
   
     let finalSnapPoint = startTabHeight.value;

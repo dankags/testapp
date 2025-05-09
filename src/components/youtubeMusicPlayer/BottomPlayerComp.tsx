@@ -20,6 +20,7 @@ import { usePlayerState } from '@/src/hooks/usePlayerState';
 import { usePlayerGestures } from '@/src/hooks/usePlayerGesture';
 import { usePlayerAnimations } from '@/src/hooks/usePlayerAnimations';
 import { cn } from '@/src/lib/utils';
+import BottomSheet from './BottomSheet';
 
 const SNAP_BOTTOM = 80;
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('screen');
@@ -30,11 +31,11 @@ export default function BottomPlayerComp({ sharedHeight }: { sharedHeight: Share
   const startTabHeight=useSharedValue(0)
   const tabsHeight=useSharedValue(0)
   const translatedX = useSharedValue(0);
-  const [safeAreaHeight,setSafeAreHeight]=useState<number>(0)
+  const safeAreaHeight = useSharedValue(0);
 
   const expandTab = useCallback(() => {
   
-    tabsHeight.value = withTiming(safeAreaHeight - 80, { duration: 300 });
+    tabsHeight.value = withTiming(safeAreaHeight.value - 80, { duration: 300 });
 }, [tabsHeight,safeAreaHeight]);
 
   const handleResetHeight = useCallback(() => {
@@ -61,21 +62,29 @@ export default function BottomPlayerComp({ sharedHeight }: { sharedHeight: Share
 
 const handleSafeAreaHeight=useCallback((e:LayoutChangeEvent)=>{
     const { height } = e.nativeEvent.layout;
-    setSafeAreHeight(height);
+    safeAreaHeight.value=height
 },[])
 
 const animateTextBottomSheetTabsStyle=useAnimatedStyle(()=>{
-  const color=interpolateColor(tabsHeight.value,[safeAreaHeight*0.15,safeAreaHeight-80],["#a3a3a3","white"])
+  const color=interpolateColor(tabsHeight.value,[safeAreaHeight.value*0.15,safeAreaHeight.value-80],["#a3a3a3","white"])
   return{
     color,
   }
 })
 
 const animateBottomSheetWrapper=useAnimatedStyle(()=>{
-  const backgroundColor=interpolateColor(tabsHeight.value,[64,safeAreaHeight*0.4,safeAreaHeight-80],["transparent","#17171780","#17171780"])
+  const backgroundColor=interpolateColor(tabsHeight.value,[64,safeAreaHeight.value*0.4,safeAreaHeight.value-80],["transparent","#17171780","#17171780"])
   return{
     backgroundColor
   }
+})
+
+const animatePlayerContainer=useAnimatedStyle(()=>{
+ 
+    const translateY=interpolate(sharedHeight.value,[80,SCREEN_HEIGHT],[-30,0])
+    return{
+      transform:[{translateY}],
+    }
 })
 
   // === Render ===
@@ -92,7 +101,7 @@ const animateBottomSheetWrapper=useAnimatedStyle(()=>{
       */}
           <SafeAreaView onLayout={(e)=>handleSafeAreaHeight(e)}  className="flex-1 relative bg-neutral-900/80">
            {/* player container */}
-            <Animated.View className={cn('flex-1 min-h-fit w-full py-0 my-0')} >
+            <Animated.View className={cn(' w-full flex-1 ')} style={[animatePlayerContainer]}>
             {/* Top Nav */}
             <Animated.View
               className=" w-full flex-row items-center justify-between px-3 "
@@ -171,55 +180,17 @@ const animateBottomSheetWrapper=useAnimatedStyle(()=>{
 
           </Animated.View>
 
-<GestureDetector gesture={bottomSheetPanGesture}>
-            <Animated.View className='w-full h-16 relative ' style={[animatedHeightTab]}>
-           <Animated.View className='flex-1  rounded-xl' style={[animateBottomSheetWrapper]}>
-              <View className="w-full flex-1 flex-row justify-center items-end absolute top-0">
-            <Pressable  onPress={() => {
-        // setActiveIndex(index);
-        expandTab();
-      }} className="w-4/12 px-3 py-4 flex-row justify-center items-center">
-              <Animated.Text className="text-lg font-semibold "  style={[animateTextBottomSheetTabsStyle]}>
-                UP NEXT
-              </Animated.Text>
-            </Pressable>
-            <Pressable disabled={!activeMusic.lyrics}  onPress={() => {
-             
-        // setActiveIndex(index);
-        expandTab();
-      }} className="w-4/12  px-3 py-4 flex-row justify-center items-center">
-              {activeMusic.lyrics?
-              <Animated.Text
-                className={cn(
-                  "text-lg font-semibold text-neutral-600",
-                  activeMusic.lyrics && "text-neutral-400"
-                )}
-                 style={[animateTextBottomSheetTabsStyle]}
-              >
-                LYRICS
-              </Animated.Text>
-              :
-                <Text
-                className={cn(
-                  "text-lg font-semibold text-neutral-600",
-                )}
-              >
-                LYRICS
-              </Text>
-              }
-            </Pressable>
-            <Pressable  onPress={() => {
-        // setActiveIndex(index);
-        expandTab();
-      }} className="w-4/12 px-3 py-4 flex-row justify-center items-center">
-              <Animated.Text className="text-lg font-semibold " style={[animateTextBottomSheetTabsStyle]}>
-                RELATED
-              </Animated.Text>
-            </Pressable>
-          </View>
-           </Animated.View>
-            </Animated.View>       
-</GestureDetector>
+            {/* bottom sheet */}
+           <BottomSheet
+            activeMusic={activeMusic}
+            animateBottomSheetWrapper={animateBottomSheetWrapper}
+            animateTextBottomSheetTabsStyle={animateTextBottomSheetTabsStyle}
+            animatedHeightTab={animatedHeightTab}
+            bottomSheetPanGesture={bottomSheetPanGesture}
+            expandTab={expandTab}
+           />
+
+
  {/* Progress Bar */}
           <Animated.View
             className="absolute bottom-0 z-20 flex-row items-center justify-start px-0"
@@ -249,7 +220,7 @@ const AnimatedMiniPlayer = ({
 }: {
   sharedHeight: SharedValue<number>;
   tabHeight:SharedValue<number>,
-  safeAreaHeight:number,
+  safeAreaHeight:SharedValue<number>,
   handlePlayToggle: () => void;
   isPlaying: boolean;
 }) => {
@@ -258,7 +229,7 @@ const AnimatedMiniPlayer = ({
     const translateY=interpolate(
       sharedHeight.value,
       [80, SCREEN_HEIGHT],
-      [-30,0],
+      [-4,0],
       Extrapolation.CLAMP
     );
     const opacity = interpolate(
@@ -273,17 +244,17 @@ const AnimatedMiniPlayer = ({
 
    const translateY=interpolate(
       tabHeight.value,
-      [80, safeAreaHeight-80],
-      [0,18],
+      [80, safeAreaHeight.value-80],
+      [0,14],
       Extrapolation.CLAMP
     );
     const opacity = interpolate(
       tabHeight.value,
-      [64, safeAreaHeight * 0.5, safeAreaHeight-80],
+      [64, safeAreaHeight.value * 0.5, safeAreaHeight.value-80],
       [0,0,1],
       Extrapolation.CLAMP
     );
-    const display = tabHeight.value < safeAreaHeight*0.5 ? "none" : "flex";
+    const display = tabHeight.value < safeAreaHeight.value*0.5 ? "none" : "flex";
     return { opacity, display,transform:[{translateY}] };
 
   });
@@ -291,7 +262,7 @@ const AnimatedMiniPlayer = ({
 
   return (
     <Animated.View
-      className="absolute  right-0 flex-1 w-3/12 flex-row items-center justify-end gap-3 px-3 overflow-hidden "
+      className="absolute  right-0 flex-1 w-3/12 flex-row items-center justify-end gap-3 px-2 overflow-hidden "
       style={[animatedMiniPlayerStyles]}
     >
       <TouchableOpacity className="p-2 rounded-full size-12 flex-row items-center justify-center">

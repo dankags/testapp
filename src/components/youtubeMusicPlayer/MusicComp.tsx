@@ -5,7 +5,7 @@ import Animated, { DerivedValue, Extrapolation, interpolate, SharedValue, useAni
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('screen');
 
-const MusicComponent = memo(({
+const MusicComponent = ({
   music,
   sharedHeight,
   translatedX,
@@ -22,7 +22,7 @@ const MusicComponent = memo(({
   translatedX: SharedValue<number>;
   scrollX: SharedValue<number>;
   tabsHeight:SharedValue<number>
-  safeAreaHeight:number
+  safeAreaHeight:SharedValue<number>
 }) => {
   const animatedMusicBarStyle = useAnimatedStyle(() => {
       const position = index * SCREEN_WIDTH;
@@ -41,7 +41,7 @@ const MusicComponent = memo(({
        height,
      };
     }
-    const height= interpolate(tabsHeight.value, [64,safeAreaHeight-80], [510, 60])
+    const height= interpolate(tabsHeight.value, [64,safeAreaHeight.value-80], [510, 60])
     return {
       opacity,
       scale,
@@ -61,15 +61,20 @@ const MusicComponent = memo(({
   
 
   const animatedImageContainer = useAnimatedStyle(() => {
-    const width = interpolate(imageWidth.value, [60, SCREEN_WIDTH], [60, 460]);
     let borderRadius:number = 0
-    if(sharedHeight.value===SCREEN_HEIGHT){
-      borderRadius=interpolate(tabsHeight.value, [64,safeAreaHeight-80], [12, 0])
-     
+    if(sharedHeight.value<SCREEN_HEIGHT){
+      const width = interpolate(imageWidth.value, [60, SCREEN_WIDTH], [60, 460]);
+      borderRadius=interpolate(sharedHeight.value, [64,safeAreaHeight.value-80], [0 ,12])
+      return{
+        width,
+        aspectRatio:1,
+        borderRadius,
+      }  
     }else{
-       borderRadius=interpolate(sharedHeight.value, [64,safeAreaHeight-80], [0 ,12])
+      const width = interpolate(imageWidth.value, [60, SCREEN_WIDTH], [50, 460]);
+      borderRadius=interpolate(tabsHeight.value, [64,safeAreaHeight.value-80], [12, 0])
+      return { width, aspectRatio: 1,borderRadius };
     }
-    return { width, aspectRatio: 1,borderRadius };
   });
 
 
@@ -80,12 +85,13 @@ const MusicComponent = memo(({
       const opacity = interpolate(sharedHeight.value, [80, SCREEN_HEIGHT * 0.3, 100], [1, 0, 0], Extrapolation.CLAMP);
       const display = sharedHeight.value > 100 ? 'none' : 'flex';
       
-      return { transform: [{ translateY }], opacity, display };
+      return { transform: [{ translateY }], opacity, display,gap:4 };
     }
-    const display=tabsHeight.value>safeAreaHeight*0.833?"flex":"none"
-    const translateY = interpolate(tabsHeight.value, [64, safeAreaHeight-80], [-10,0], Extrapolation.CLAMP);
-    const opacity = interpolate(tabsHeight.value, [64,safeAreaHeight*0.833 ,safeAreaHeight-80], [0,0,1], Extrapolation.CLAMP);
-    return { transform: [{ translateY }], opacity,display };
+    const display=tabsHeight.value>safeAreaHeight.value*0.833?"flex":"none"
+    
+    const translateY = interpolate(tabsHeight.value, [64, safeAreaHeight.value-80], [-10,0], Extrapolation.CLAMP);
+    const opacity = interpolate(tabsHeight.value, [64,safeAreaHeight.value*0.833 ,safeAreaHeight.value-80], [0,0,1], Extrapolation.CLAMP);
+    return { transform: [{ translateY }], opacity,display,gap:0 };
   });
 
  
@@ -102,11 +108,11 @@ const MusicComponent = memo(({
             />
           </Animated.View>
         </Animated.View>
-        <Animated.View className="h-20 w-9/12 justify-center gap-1 px-2" style={[animatedMusicInfo]}>
-          <Text className="text-white text-lg font-semibold">{music.name}</Text>
-          <View className="flex-row items-center">
+        <Animated.View className="h-20 w-9/12 justify-center  px-2" style={[animatedMusicInfo]}>
+          <Text className="text-white  font-semibold">{music.name}</Text>
+          <View className="flex-row  items-center">
             {music.artists.map((artist, index) => (
-              <Text key={artist.id} className="text-neutral-400">
+              <Text key={artist.id} className=" text-neutral-400">
                 {artist.name}
                 {index < music.artists.length - 1 && " • "}
               </Text>
@@ -116,8 +122,8 @@ const MusicComponent = memo(({
       </View>
     </Animated.View>
   );
-});
+};
 
-MusicComponent.displayName="MusicComponent"
+// MusicComponent.displayName="MusicComponent"
 
 export default MusicComponent
