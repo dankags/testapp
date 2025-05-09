@@ -1,18 +1,22 @@
 import { Link } from "expo-router";
 import { Dimensions, Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
-import CustomIcon from "./Customicon";
-import * as Progress from 'react-native-progress';
-import { cn, formatDuration, formatNumber } from "../lib/utils";
+import CustomIcon from "../Customicon";
+// import Slider from '@react-native-community/slider';
+import { cn, formatDuration, formatNumber } from "@/src/lib/utils";
+import { useEffect, useState } from "react";
 
 type AnimatedControlsMusicInfoProps={
   sharedHeight: SharedValue<number>;
   activeMusic: Music;
   isPlaying: boolean;
+  safeAreaHeight:number,
+   tabsHeight:SharedValue<number>
   handlePlayToggle: () => void;
   handleNext: () => void;
   handlePrevious: () => void;
   handleResetHeight: () => void;
+ 
 }
 
 const SNAP_BOTTOM = 80;
@@ -24,33 +28,63 @@ const AnimatedControlsMusicInfo = ({
   sharedHeight,
   activeMusic,
   isPlaying,
+  tabsHeight,
+  safeAreaHeight,
   handleNext,
   handlePrevious,
   handleResetHeight,
   handlePlayToggle,
 }:AnimatedControlsMusicInfoProps ) => {
-  const animatedMusicPlayerWrapperStyles = useAnimatedStyle(() => {
-    const display = sharedHeight.value < 120 ? "none" : "flex";
-    const translateY = interpolate(
+  const [displayCompomnent,setDisplayComp]=useState(false)
+   const animatedFromSharedHeight = useAnimatedStyle(() => {
+   if(sharedHeight.value<SCREEN_HEIGHT){
+     const translateY = interpolate(
       sharedHeight.value,
       [100, SCREEN_HEIGHT],
       [SCREEN_WIDTH, 0]
     );
+
     const opacity = interpolate(
       sharedHeight.value,
       [SCREEN_WIDTH, SCREEN_HEIGHT],
       [0, 1]
     );
+    const display=sharedHeight.value>(SCREEN_HEIGHT/2)?"flex":"none"
     return {
-      display,
       transform: [{ translateY }],
       opacity,
+      display,
     };
+  }
+
+  const translateY = interpolate(
+      tabsHeight.value,
+      [64, safeAreaHeight - 80],
+      [0, safeAreaHeight / 2]
+    );
+
+    const opacity = interpolate(
+      tabsHeight.value,
+      [64, safeAreaHeight * 0.4, safeAreaHeight - 80],
+      [1, 0.2, 0]
+    );
+    const display=tabsHeight.value<safeAreaHeight*0.75?"flex":"none"
+    return {
+      transform: [{ translateY }],
+      opacity,
+      display,
+    };
+
   });
+
+
+
+
+
   return (
     <Animated.View
-      className={"w-full flex-1 px-6"}
-      style={[animatedMusicPlayerWrapperStyles]}
+      className={"w-full flex-1 px-6  relative"}
+      style={[animatedFromSharedHeight]}
     >
       <View className="  mb-6 mt-11">
         <Text className="text-white text-2xl font-bold">
@@ -79,7 +113,7 @@ const AnimatedControlsMusicInfo = ({
               color="white"
             />
           </Pressable>
-          <Pressable className="" onPress={handlePrevious}>
+          <Pressable className="p-3 rounded-full" onPress={handlePrevious}>
             <CustomIcon
               iconLibraryType={"FontAwesome5"}
               iconName={"step-backward"}
@@ -94,11 +128,11 @@ const AnimatedControlsMusicInfo = ({
             <CustomIcon
               iconLibraryType={isPlaying ? "Ionicons" : "Foundation"}
               iconName={isPlaying ? "pause" : "play"}
-              size={28}
+              size={32}
               color="black"
             />
           </Pressable>
-          <Pressable className="" onPress={handleNext}>
+          <Pressable className="p-3 rounded-full" onPress={handleNext}>
             <CustomIcon
               iconLibraryType={"FontAwesome5"}
               iconName={"step-forward"}
@@ -116,26 +150,30 @@ const AnimatedControlsMusicInfo = ({
           </Pressable>
         </View>
         <View className="w-full flex-row items-center py-3">
-          <Progress.Bar
-            progress={0.4}
-            height={4}
-            width={SCREEN_WIDTH - 48}
-            color="white"
-            borderRadius={20}
-            borderColor="#ffffff1a"
-            unfilledColor="#ffffff33"
-            className="bg-white/10"
-          />
+          {/* <Slider
+            style={{width:"100%",height:8}}
+            minimumValue={0}
+            maximumValue={1}
+            minimumTrackTintColor="#Fafafa"
+            maximumTrackTintColor="#ffffff99"
+            thumbTintColor="transparent"
+          /> */}
         </View>
         <View className="w-full flex-row items-center justify-between">
-          <Text className="text-neutral-300 text-sm">00:00</Text>
-          <Text className="text-neutral-300 text-sm">
+        <Text className="text-neutral-300 bg-white/60xt-sm">
+            {formatDuration(40)}
+          </Text>
+          <Text className="text-neutral-300 bg-white/60xt-sm">
             {formatDuration(activeMusic.duration)}
           </Text>
         </View>
       </View>
       <View className="w-full mt-12">
-        <ScrollView className="" horizontal={true} showsHorizontalScrollIndicator={false}>
+        <ScrollView
+          className=""
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+        >
           <View
             className="flex-row rounded-full items-center mr-3  bg-white/15"
             style={{ borderRadius: 9999 }}
@@ -218,28 +256,7 @@ const AnimatedControlsMusicInfo = ({
           </Pressable>
         </ScrollView>
       </View>
-      <View className="flex-1 w-full flex-row justify-center items-end">
-        <Pressable className="w-4/12 px-3 py-4 flex-row justify-center items-center">
-          <Text className="text-lg font-semibold text-neutral-400">
-            UP NEXT
-          </Text>
-        </Pressable>
-        <Pressable className="w-4/12  px-3 py-4 flex-row justify-center items-center">
-          <Text
-            className={cn(
-              "text-lg font-semibold text-neutral-600",
-              activeMusic.lyrics && "text-neutral-400"
-            )}
-          >
-            LYRICS
-          </Text>
-        </Pressable>
-        <Pressable className="w-4/12 px-3 py-4 flex-row justify-center items-center">
-          <Text className="text-lg font-semibold text-neutral-400">
-            RELATED
-          </Text>
-        </Pressable>
-      </View>
+    
     </Animated.View>
   );
 };

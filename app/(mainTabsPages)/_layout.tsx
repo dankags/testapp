@@ -11,7 +11,8 @@ import Animated, {
 import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import { cn } from "@/src/lib/utils";
 import CustomIcon from "@/src/components/Customicon";
-import BottomPlayerComp from "@/src/components/BottomPlayerComp";
+import BottomPlayerComp from "@/src/components/youtubeMusicPlayer/BottomPlayerComp";
+import { StatusBar } from "expo-status-bar";
 
 
 type TabProps = {
@@ -142,6 +143,11 @@ export default function MainTabsScreensLayout() {
 
   return (
     <>
+    <StatusBar
+  translucent
+  backgroundColor="transparent"
+ style="light" // or "dark-content"
+/>
       <BottomPlayerComp sharedHeight={playerHeight} />
       <Tabs
         tabBar={() => (

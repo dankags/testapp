@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { dummyMusicData } from '../constants/data';
 
 export function usePlayerState() {
@@ -21,6 +21,15 @@ export function usePlayerState() {
     },
     [activeMusicIndex, musicQueue]
   );
+  
+
+  useEffect(()=>{
+    if(!activeMusic) return
+    if(isPlaying){
+      setIsPlaying(false)
+      return
+    }
+  },[activeMusic])
 
   return {
     isPlaying,
