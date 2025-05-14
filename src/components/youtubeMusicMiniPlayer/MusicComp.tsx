@@ -5,7 +5,7 @@ import Animated, { DerivedValue, Extrapolation, interpolate, SharedValue, useAni
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('screen');
 
-const MusicComponent = ({
+const MusicComponent = memo(({
   music,
   sharedHeight,
   translatedX,
@@ -24,13 +24,17 @@ const MusicComponent = ({
   tabsHeight:SharedValue<number>
   safeAreaHeight:SharedValue<number>
 }) => {
+
+  // Animation for the entire music bar container based on scroll and height state
   const animatedMusicBarStyle = useAnimatedStyle(() => {
       const position = index * SCREEN_WIDTH;
     const inputRange = [position - SCREEN_WIDTH, position, position + SCREEN_WIDTH];
+
+    // Scale and opacity change smoothly as user scrolls horizontally
     const scale = interpolate(scrollX.value, inputRange, [0.9, 1, 0.9], Extrapolation.CLAMP);
     const opacity = interpolate(scrollX.value, inputRange, [0.6, 1, 0.6], Extrapolation.CLAMP);
-    // const translateY = interpolate(scrollX.value, inputRange, [20, 0, 20], Extrapolation.CLAMP);
-    // const translateY = interpolate(scrollX.value, inputRange, [20, 0, 20], Extrapolation.CLAMP);
+   
+    // When player is not fullscreen
     if(sharedHeight.value<SCREEN_HEIGHT){
       const height=interpolate(imageWidth.value, [60, SCREEN_WIDTH], [60, 510])
      return {
@@ -41,6 +45,8 @@ const MusicComponent = ({
        height,
      };
     }
+
+      // When player is fullscreen or expanded
     const height= interpolate(tabsHeight.value, [64,safeAreaHeight.value-80], [510, 60])
     return {
       opacity,
@@ -51,7 +57,7 @@ const MusicComponent = ({
     };
   });
 
-
+// Animation for the outer image container wrapper (controls its size)
   const animatedImageContainerWrapper = useAnimatedStyle(() => {
     const width = interpolate(imageWidth.value, [60, SCREEN_WIDTH], [60, SCREEN_WIDTH - 24]);
     const height = interpolate(imageWidth.value, [60, SCREEN_WIDTH], [60, 510]);
@@ -59,12 +65,12 @@ const MusicComponent = ({
   });
 
   
-
+ // Animation for the inner image (album art), adjusting width and border radius
   const animatedImageContainer = useAnimatedStyle(() => {
-    let borderRadius:number = 0
+   
     if(sharedHeight.value<SCREEN_HEIGHT){
       const width = interpolate(imageWidth.value, [60, SCREEN_WIDTH], [60, 460]);
-      borderRadius=interpolate(sharedHeight.value, [64,safeAreaHeight.value-80], [0 ,12])
+      const borderRadius=interpolate(sharedHeight.value, [64, SCREEN_HEIGHT], [0, 12])
       return{
         width,
         aspectRatio:1,
@@ -72,13 +78,13 @@ const MusicComponent = ({
       }  
     }else{
       const width = interpolate(imageWidth.value, [60, SCREEN_WIDTH], [50, 460]);
-      borderRadius=interpolate(tabsHeight.value, [64,safeAreaHeight.value-80], [12, 0])
+      const borderRadius=interpolate(tabsHeight.value, [64,safeAreaHeight.value-80], [12, 0])
       return { width, aspectRatio: 1,borderRadius };
     }
   });
 
 
-
+// Animation for the song title/artist text info
   const animatedMusicInfo = useAnimatedStyle(() => {
     if(sharedHeight.value<SCREEN_HEIGHT){
       const translateY = interpolate(sharedHeight.value, [80, SCREEN_HEIGHT], [0, -100], Extrapolation.CLAMP);
@@ -122,8 +128,8 @@ const MusicComponent = ({
       </View>
     </Animated.View>
   );
-};
+});
 
-// MusicComponent.displayName="MusicComponent"
+MusicComponent.displayName="MusicComponent"
 
 export default MusicComponent

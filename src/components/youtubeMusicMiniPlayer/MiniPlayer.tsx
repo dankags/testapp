@@ -14,18 +14,26 @@ import Animated, {
 import CustomProgressBar from './customProgressBar';
 import CustomIcon from '../Customicon';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AnimatedControlsMusicInfo from './AnimatedControlsMusicInfo';
-import AnimatedTrackSetter from './AnimatedTrackSetter';
+import AnimatedControlsMusicInfo from './MusicPlayerControls';
+import AnimatedTrackSetter from './MusicFlatList';
 import { usePlayerState } from '@/src/hooks/usePlayerState';
 import { usePlayerGestures } from '@/src/hooks/usePlayerGesture';
-import { usePlayerAnimations } from '@/src/hooks/usePlayerAnimations';
+import { useMiniPlayerAnimations } from '@/src/hooks/usePlayerAnimations';
 import { cn } from '@/src/lib/utils';
-import BottomSheet from './BottomSheet';
+import BottomSheet from './MiniPlayerSheet';
+
+type DefaultMiniPlayerActionButtonsProps= {
+  sharedHeight: SharedValue<number>;
+  tabHeight:SharedValue<number>,
+  safeAreaHeight:SharedValue<number>,
+  handlePlayToggle: () => void;
+  isPlaying: boolean;
+}
 
 const SNAP_BOTTOM = 80;
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('screen');
 
-export default function BottomPlayerComp({ sharedHeight }: { sharedHeight: SharedValue<number> }) {
+export default function MiniPlayer({ sharedHeight }: { sharedHeight: SharedValue<number> }) {
   
   const startHeight = useSharedValue(SNAP_BOTTOM);
   const startTabHeight=useSharedValue(0)
@@ -33,38 +41,49 @@ export default function BottomPlayerComp({ sharedHeight }: { sharedHeight: Share
   const translatedX = useSharedValue(0);
   const safeAreaHeight = useSharedValue(0);
 
+  // Expands the tab section by animating `tabsHeight` to fill the screen 
+// minus 80px (reserved space like a player or safe area) over 300ms.
   const expandTab = useCallback(() => {
   
     tabsHeight.value = withTiming(safeAreaHeight.value - 80, { duration: 300 });
 }, [tabsHeight,safeAreaHeight]);
 
+// Resets the shared height to the bottom snap position (collapsed state)
+// using a smooth animation over 600ms.
   const handleResetHeight = useCallback(() => {
     sharedHeight.value = withTiming(SNAP_BOTTOM, {
         duration:600
     });
   }, [sharedHeight]);
 
+  // Expands the shared height to full screen height (expanded state)
+// using a smooth animation over 600ms.
   const handleExpandHeight=useCallback(() => {
     sharedHeight.value = withTiming(SCREEN_HEIGHT, {
         duration:600
     });
   }, [sharedHeight]);
 
+  // Mini-player actual state
   const { isPlaying, togglePlay, activeMusic, navigateTrack, setIsPlaying } = usePlayerState();
 
+  // All mini-player Gestures
   const { verticalPanGesture, horizontalPanGesture,bottomSheetPanGesture } = usePlayerGestures(
     tabsHeight, safeAreaHeight, startTabHeight, sharedHeight, startHeight, translatedX, navigateTrack, setIsPlaying
   );
-  
-  const { containerStyle, navBarStyle, wrapperStyle,animatedHeightTab } = usePlayerAnimations({
+
+//All mini-player animations 
+  const { containerStyle, navBarStyle, wrapperStyle,animatedHeightTab } = useMiniPlayerAnimations({
     sharedHeight, activeMusic, translatedX,safeAreaHeight,tabsHeight
   });
 
+// set the safeArea height on safeArea layout change 
 const handleSafeAreaHeight=useCallback((e:LayoutChangeEvent)=>{
     const { height } = e.nativeEvent.layout;
     safeAreaHeight.value=height
 },[])
 
+// 
 const animateTextBottomSheetTabsStyle=useAnimatedStyle(()=>{
   const color=interpolateColor(tabsHeight.value,[safeAreaHeight.value*0.15,safeAreaHeight.value-80],["#a3a3a3","white"])
   return{
@@ -72,6 +91,8 @@ const animateTextBottomSheetTabsStyle=useAnimatedStyle(()=>{
   }
 })
 
+// Animates the background color of the mini-player bottom sheet
+// based on the current `tabsHeight` value.
 const animateBottomSheetWrapper=useAnimatedStyle(()=>{
   const backgroundColor=interpolateColor(tabsHeight.value,[64,safeAreaHeight.value*0.4,safeAreaHeight.value-80],["transparent","#17171780","#17171780"])
   return{
@@ -79,9 +100,11 @@ const animateBottomSheetWrapper=useAnimatedStyle(()=>{
   }
 })
 
+// Animates the vertical position of the player container
+// - Slides it up from -46 to 0 as `sharedHeight` grows from 80 to full screen height.
 const animatePlayerContainer=useAnimatedStyle(()=>{
  
-    const translateY=interpolate(sharedHeight.value,[80,SCREEN_HEIGHT],[-30,0])
+    const translateY=interpolate(sharedHeight.value,[80,SCREEN_HEIGHT],[-46,0])
     return{
       transform:[{translateY}],
     }
@@ -94,14 +117,11 @@ const animatePlayerContainer=useAnimatedStyle(()=>{
       <Animated.View
         entering={FadeIn.duration(300)}
         className={"w-full absolute bottom-20  z-10 "}
-        // style={{bottom:100,backgroundColor:"#fcd34d",height:80,overflow:"hidden"}}
         style={[containerStyle]}
       >
-        {/* <Text className='text-white flex-1'>hythgghg</Text>
-      */}
-          <SafeAreaView onLayout={(e)=>handleSafeAreaHeight(e)}  className="flex-1 relative bg-neutral-900/80">
+          <SafeAreaView onLayout={(e)=>handleSafeAreaHeight(e)}  className="flex-1  bg-neutral-900/80">
            {/* player container */}
-            <Animated.View className={cn(' w-full flex-1 ')} style={[animatePlayerContainer]}>
+            <Animated.View className={cn('min-h-20 w-full flex-1 ')} style={[animatePlayerContainer]}>
             {/* Top Nav */}
             <Animated.View
               className=" w-full flex-row items-center justify-between px-3 "
@@ -168,7 +188,7 @@ const animatePlayerContainer=useAnimatedStyle(()=>{
             {/* </ScrollView> */}
 
             {/* Mini Controls (bottom right corner) */}
-            <AnimatedMiniPlayer
+            <DefaultMiniPlayerActionButtons
               handlePlayToggle={togglePlay}
               sharedHeight={sharedHeight}
               isPlaying={isPlaying}
@@ -211,25 +231,21 @@ const animatePlayerContainer=useAnimatedStyle(()=>{
   );
 }
 
-const AnimatedMiniPlayer = ({
+const DefaultMiniPlayerActionButtons = ({
   sharedHeight,
   handlePlayToggle,
   isPlaying,
   tabHeight,
   safeAreaHeight,
-}: {
-  sharedHeight: SharedValue<number>;
-  tabHeight:SharedValue<number>,
-  safeAreaHeight:SharedValue<number>,
-  handlePlayToggle: () => void;
-  isPlaying: boolean;
-}) => {
+}:DefaultMiniPlayerActionButtonsProps) => {
+  // Animates the Mini Player's visibility, position, and display based on layout state.
+  // when the sharedHeight and tabHeight changes
   const animatedMiniPlayerStyles = useAnimatedStyle(() => {
    if(sharedHeight.value<SCREEN_HEIGHT){ 
     const translateY=interpolate(
       sharedHeight.value,
       [80, SCREEN_HEIGHT],
-      [-4,0],
+      [12,0],
       Extrapolation.CLAMP
     );
     const opacity = interpolate(
@@ -262,7 +278,7 @@ const AnimatedMiniPlayer = ({
 
   return (
     <Animated.View
-      className="absolute  right-0 flex-1 w-3/12 flex-row items-center justify-end gap-3 px-2 overflow-hidden "
+      className="absolute  right-0 flex-1 w-3/12 flex-row items-center justify-end gap-3 px-2  "
       style={[animatedMiniPlayerStyles]}
     >
       <TouchableOpacity className="p-2 rounded-full size-12 flex-row items-center justify-center">

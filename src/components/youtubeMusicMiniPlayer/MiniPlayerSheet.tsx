@@ -13,13 +13,14 @@ type BottomSheetProps={
     expandTab:()=>void;
 }
 
-const BottomSheet = ({activeMusic,animateBottomSheetWrapper,animateTextBottomSheetTabsStyle,animatedHeightTab,bottomSheetPanGesture,expandTab}:BottomSheetProps) => {
+const MiniPlayerBottomSheet = ({activeMusic,animateBottomSheetWrapper,animateTextBottomSheetTabsStyle,animatedHeightTab,bottomSheetPanGesture,expandTab}:BottomSheetProps) => {
     const handleTabPress=({e,tab}:{e:GestureResponderEvent,tab:"lyrics"|"upNext"|"related"})=>{
         expandTab()
     }
   return (
     <GestureDetector gesture={bottomSheetPanGesture}>
             <Animated.View className='w-full absolute bottom-0 ' style={[animatedHeightTab]}>
+               {/* <Animated.View className='w-full absolute bottom-0 min-h-[60px] bg-amber-500' > */}
            <Animated.View className='flex-1 relative rounded-xl' style={[animateBottomSheetWrapper]}>
               <View className="w-full flex-1 flex-row justify-center items-end absolute top-0">
             <Pressable  onPress={(e)=>handleTabPress({e, tab: "upNext"})} className="w-4/12 px-3 py-4 flex-row justify-center items-center">
@@ -60,4 +61,4 @@ const BottomSheet = ({activeMusic,animateBottomSheetWrapper,animateTextBottomShe
   )
 }
 
-export default BottomSheet
+export default MiniPlayerBottomSheet

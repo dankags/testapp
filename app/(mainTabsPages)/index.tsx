@@ -5,7 +5,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function HomeScreen() {
   return (
   <>
-    {/* <StatusBar backgroundColor={"rgb(255,255,25)"} barStyle={"dark-content"}/> */}
       <SafeAreaView
         style={{
           flex: 1,
@@ -22,7 +21,7 @@ export default function HomeScreen() {
           }
         }}/>
     
-        <Text className='text-white'>Edit app/index.tsx to edit this screen.</Text>
+        <Text className='text-white'>This is the HomePage.</Text>
         
       </SafeAreaView>
   </>

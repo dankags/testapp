@@ -1,18 +1,17 @@
-import { View, Text, TouchableOpacity, Dimensions } from "react-native";
-import React, { memo, useMemo } from "react";
-import { router, Tabs, usePathname } from "expo-router";
-import Animated, {
-  Extrapolation,
-  interpolate,
-  SharedValue,
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
-import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
-import { cn } from "@/src/lib/utils";
 import CustomIcon from "@/src/components/Customicon";
-import BottomPlayerComp from "@/src/components/youtubeMusicPlayer/BottomPlayerComp";
+import MiniPlayer from "@/src/components/youtubeMusicMiniPlayer/MiniPlayer";
+import { cn } from "@/src/lib/utils";
+import { router, Tabs, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import React, { memo, useMemo } from "react";
+import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import Animated, {
+    Extrapolation,
+    interpolate,
+    SharedValue,
+    useAnimatedStyle,
+    useSharedValue,
+} from "react-native-reanimated";
 
 
 type TabProps = {
@@ -62,6 +61,7 @@ const tabItems = [
   },
 ];
 
+// Tab button component
 const TabBarButtonItem = memo(
   ({
     playerHeight,
@@ -128,6 +128,7 @@ export default function MainTabsScreensLayout() {
     )?.route;
   }, [pathname]);
 
+  // animate the tabs when the mini-player height Changes by translating in the Y-axis
   const animatedTabsStyle = useAnimatedStyle(() => {
     const translateY = interpolate(
       playerHeight.value,
@@ -143,14 +144,20 @@ export default function MainTabsScreensLayout() {
 
   return (
     <>
+    {/* App status bar */}
     <StatusBar
   translucent
   backgroundColor="transparent"
- style="light" // or "dark-content"
+ style="light" 
 />
-      <BottomPlayerComp sharedHeight={playerHeight} />
+
+{/* the mini player */}
+      <MiniPlayer sharedHeight={playerHeight} />
+
+      {/* app tabs */}
       <Tabs
         tabBar={() => (
+          // tabs animated container
           <Animated.View
             className="w-full h-fit flex-row py-2 bg-neutral-900 absolute bottom-0"
             style={[animatedTabsStyle]}

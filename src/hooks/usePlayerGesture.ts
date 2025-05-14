@@ -9,13 +9,16 @@ const { height: SCREEN_HEIGHT} = Dimensions.get('screen');
 const SNAP_TOP = SCREEN_HEIGHT;
 
 export function usePlayerGestures(tabsHeight:SharedValue<number>,safeAreaHeight:SharedValue<number>,startTabHeight:SharedValue<number>,sharedHeight: SharedValue<number>, startHeight: SharedValue<number>, translatedX: SharedValue<number>, onNavigate: (dir: 'prev' | 'next') => void, setIsPlaying: (val: boolean) => void) {
+  // Vertical pan gesture to expand or collapse the shared main mini-player height
   const verticalPanGesture = useMemo(() =>
     Gesture.Pan()
-  .activateAfterLongPress(200)
+  .activateAfterLongPress(200)// Waits 200ms before activating to prevent conflicts with flatlist swipe or scroll
   .onBegin(() => {
+     // Capture current height when gesture starts
     startHeight.value = sharedHeight.value;
   })
   .onUpdate(e => {
+     // Update height dynamically during gesture
     sharedHeight.value = clamp(
       startHeight.value - e.translationY,
       SNAP_BOTTOM,
@@ -23,6 +26,7 @@ export function usePlayerGestures(tabsHeight:SharedValue<number>,safeAreaHeight:
     );
   })
   .onEnd(e => {
+    // Determine gesture direction and apply snap logic
     const isFlickingUp = e.velocityY < -300;
     const isFlickingDown = e.velocityY > 300;
 
@@ -31,18 +35,21 @@ export function usePlayerGestures(tabsHeight:SharedValue<number>,safeAreaHeight:
     let finalSnapPoint = sharedHeight.value;
 
     if (isFlickingUp) {
-      finalSnapPoint = SNAP_TOP;
+      finalSnapPoint = SNAP_TOP;// Snap to full screen
     } else if (isFlickingDown) {
-      finalSnapPoint = SNAP_BOTTOM;
+      finalSnapPoint = SNAP_BOTTOM;// Collapse
     } else {
-      finalSnapPoint = sharedHeight.value > halfway ? 60 : SNAP_BOTTOM;
+       // Snap based on current height position
+      finalSnapPoint = sharedHeight.value < halfway ? 80 : SNAP_TOP;
     }
 
     sharedHeight.value = withTiming(finalSnapPoint, { duration: 300 });
   }),
     [sharedHeight]
   );
-
+  
+// Horizontal pan gesture to navigate between items (e.g., songs/playlists)
+// I did not use it since it does not match with the youtube music one
   const horizontalPanGesture = useMemo(() =>
     Gesture.Pan()
       .onUpdate(e => {
@@ -57,13 +64,16 @@ export function usePlayerGestures(tabsHeight:SharedValue<number>,safeAreaHeight:
     [onNavigate]
   );
 
+  // Bottom sheet gesture to expand/collapse tab height (Mini-player bottom sheet) (e.g. UpNext, lyrics, Related)
   const bottomSheetPanGesture = useMemo(() => (Gesture.Pan()
     .minDistance(5)
-    .activateAfterLongPress(100)
+    .activateAfterLongPress(100)// Prevent conflicts with vertical pan gesture
     .onBegin(() => {
+        // Store starting height
       startTabHeight.value = tabsHeight.value;
     })
     .onUpdate((e) => {
+      // Adjust tab height during drag
       tabsHeight.value = clamp(
         startTabHeight.value - e.translationY,
         SNAP_BOTTOM,
@@ -71,18 +81,20 @@ export function usePlayerGestures(tabsHeight:SharedValue<number>,safeAreaHeight:
       );
     })
      .onEnd((e)=>{
+      // Determine if it's a flick or release, then snap accordingly
        const isFlickingUp = e.velocityY < -300;
     const isFlickingDown = e.velocityY > 300;
-    const maxHeight = safeAreaHeight.value-70; // use derived or constant if needed
+    const maxHeight = safeAreaHeight.value-70; 
     const halfway = maxHeight / 2;
   
     let finalSnapPoint = startTabHeight.value;
   
     if (isFlickingUp) {
-      finalSnapPoint = maxHeight;
+      finalSnapPoint = maxHeight;// Expand fully
     } else if (isFlickingDown) {
-      finalSnapPoint = 64;
+      finalSnapPoint = 64;// Collapse to mini mode
     } else {
+      // Snap to nearest height based on position
       finalSnapPoint = tabsHeight.value > halfway ? maxHeight : 64;
     }
   
